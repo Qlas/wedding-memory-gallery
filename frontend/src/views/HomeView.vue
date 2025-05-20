@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+import Toast from 'primevue/toast';
+
+import Upload from '@/components/Upload.vue';
+
 </script>
 
 <template>
   <main>
-    <TheWelcome />
+    <Toast />
+    <Upload />
   </main>
 </template>

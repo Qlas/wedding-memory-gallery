@@ -16,7 +16,6 @@ const onError = (event: FileUploadErrorEvent) => {
   toast.add({ severity: 'error', summary: 'Error', detail: `Something went wrong: ${event.xhr.statusText}`, life: 3000 });
 
 }
-
 </script>
 
 <template>
@@ -32,9 +31,6 @@ const onError = (event: FileUploadErrorEvent) => {
         <span>Drag and drop files to here to upload.</span>
       </template>
     </FileUpload>
-
-
-
   </Dialog>
 </template>
 

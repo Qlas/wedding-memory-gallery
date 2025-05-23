@@ -114,6 +114,21 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
+    async fn invalid_query_param() {
+        let tmp_dir = TempDir::new().unwrap();
+        let path = tmp_dir.path().to_path_buf();
+        let app = app(path);
+
+        let server = TestServer::new(app).unwrap();
+
+        let response = server.get("/images").add_query_param("size", 0).await;
+
+        response.assert_status_bad_request();
+        response.assert_text_contains("Failed to deserialize query string: size: invalid value: integer `0`, expected a nonzero u16");
+    }
+
+    #[rstest]
+    #[tokio::test]
     async fn download_file() {
         let tmp_dir = TempDir::new().unwrap();
         let path = tmp_dir.path().to_path_buf();

@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use axum::Router;
 use axum::extract::{Multipart, State};
 use axum::routing::post;
@@ -9,25 +7,35 @@ use tracing::info;
 use uuid::Uuid;
 
 use crate::errors::AppError;
+use crate::state::AppState;
 
-pub fn router() -> Router<PathBuf> {
+pub fn router() -> Router<AppState> {
     Router::new().route("/", post(upload))
 }
 
 async fn upload(
-    State(storage_directory): State<PathBuf>,
+    State(app_state): State<AppState>,
     mut multipart: Multipart,
 ) -> Result<(), AppError> {
     while let Some(mut field) = multipart.next_field().await? {
-        if let Some(filename) = field.file_name() {
-            info!("Saving '{filename}' file.");
-            let mut file = File::create(storage_directory.join(Uuid::new_v4().to_string())).await?;
+        info!("Saving a new file.");
 
-            while let Some(chunk) = field.chunk().await? {
-                file.write_all(&chunk).await?;
-            }
-            file.flush().await?;
+        let path = app_state.storage_directory.join(Uuid::new_v4().to_string());
+
+        let mut file = File::create(path.clone()).await?;
+
+        while let Some(chunk) = field.chunk().await? {
+            file.write_all(&chunk).await?;
         }
+        file.flush().await?;
+
+        let file_name = field.file_name().unwrap_or("DEFAULT");
+        let mime = mime_guess::from_path(file_name).first_or_text_plain();
+
+        app_state
+            .database
+            .add_file(path.to_string_lossy().to_string(), mime.essence_str())
+            .await?;
     }
 
     Ok(())
@@ -37,6 +45,7 @@ async fn upload(
 mod tests {
     // We want to start the full axum server stack.
     use super::super::app;
+    use crate::state::AppState;
 
     use axum_test::TestServer;
     use axum_test::multipart::{MultipartForm, Part};
@@ -48,12 +57,10 @@ mod tests {
     fn image_form() -> MultipartForm {
         let file_bytes = b"test file content".to_vec();
         let part = Part::bytes(file_bytes)
-            .file_name("test.jpg")
+            .file_name("test.png")
             .mime_type("image/jpeg");
 
-        MultipartForm::new()
-            .add_text("description", "Test Image")
-            .add_part("file", part)
+        MultipartForm::new().add_part("file", part)
     }
 
     #[rstest]
@@ -61,7 +68,11 @@ mod tests {
     async fn upload_file(image_form: MultipartForm) {
         let tmp_dir = TempDir::new().unwrap();
         let path = tmp_dir.path().to_path_buf();
-        let app = app(path.clone());
+        let state = AppState::try_new()
+            .await
+            .unwrap()
+            .with_storage_directory(path);
+        let app = app(state.clone());
 
         let server = TestServer::new(app).unwrap();
 
@@ -69,10 +80,21 @@ mod tests {
 
         response.assert_status_ok();
 
-        let tmp_dir: Vec<_> = read_dir(path).unwrap().filter_map(Result::ok).collect();
+        let tmp_dir: Vec<_> = read_dir(state.storage_directory)
+            .unwrap()
+            .filter_map(Result::ok)
+            .collect();
         assert_eq!(tmp_dir.len(), 1);
+
         let file = tmp_dir.first().unwrap().path();
-        let file_content = read_to_string(file).unwrap();
+        let file_content = read_to_string(file.clone()).unwrap();
         assert_eq!(file_content, "test file content");
+
+        let db_files = state.database.get_files(0, 5).await.unwrap();
+        assert_eq!(db_files.len(), 1);
+        let first_file = db_files.first().unwrap();
+        assert_eq!(first_file.id, 1);
+        assert_eq!(first_file.mime, "image/png");
+        assert_eq!(first_file.path, file.to_string_lossy().to_string());
     }
 }

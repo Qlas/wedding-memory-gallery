@@ -1,15 +1,18 @@
-use std::path::PathBuf;
+use errors::AppError;
+use state::AppState;
 
+mod database;
 mod errors;
 mod routers;
+mod state;
 
 #[tokio::main]
-async fn main() {
-    let storage_directory = PathBuf::from("storage/");
+async fn main() -> Result<(), AppError> {
+    let state = AppState::try_new().await?;
     tracing_subscriber::fmt().init();
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, routers::app(storage_directory))
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
+    axum::serve(listener, routers::app(state)).await?;
+
+    Ok(())
 }

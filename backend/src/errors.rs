@@ -4,6 +4,7 @@ use axum::{
 };
 use tracing::error;
 
+#[derive(Debug)]
 pub struct AppError(anyhow::Error);
 
 impl IntoResponse for AppError {

@@ -68,10 +68,11 @@ mod tests {
     async fn upload_file(image_form: MultipartForm) {
         let tmp_dir = TempDir::new().unwrap();
         let path = tmp_dir.path().to_path_buf();
-        let state = AppState::try_new()
+        let state = AppState::builder()
+            .with_storage_directory(path)
+            .try_build()
             .await
-            .unwrap()
-            .with_storage_directory(path);
+            .unwrap();
         let app = app(state.clone());
 
         let server = TestServer::new(app).unwrap();

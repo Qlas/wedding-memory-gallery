@@ -8,7 +8,7 @@ mod state;
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
-    let state = AppState::try_new().await?;
+    let state = AppState::builder().try_build().await?;
     tracing_subscriber::fmt().init();
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;

@@ -69,10 +69,11 @@ mod tests {
     async fn read_file_list() {
         let tmp_dir = TempDir::new().unwrap();
         let path = tmp_dir.path().to_path_buf();
-        let state = AppState::try_new()
+        let state = AppState::builder()
+            .with_storage_directory(path.clone())
+            .try_build()
             .await
-            .unwrap()
-            .with_storage_directory(path.clone());
+            .unwrap();
 
         state
             .database
@@ -99,10 +100,11 @@ mod tests {
     async fn query_param() {
         let tmp_dir = TempDir::new().unwrap();
         let path = tmp_dir.path().to_path_buf();
-        let state = AppState::try_new()
+        let state = AppState::builder()
+            .with_storage_directory(path)
+            .try_build()
             .await
-            .unwrap()
-            .with_storage_directory(path);
+            .unwrap();
         let app = app(state);
 
         let server = TestServer::new(app).unwrap();
@@ -117,10 +119,11 @@ mod tests {
     async fn invalid_query_param() {
         let tmp_dir = TempDir::new().unwrap();
         let path = tmp_dir.path().to_path_buf();
-        let state = AppState::try_new()
+        let state = AppState::builder()
+            .with_storage_directory(path)
+            .try_build()
             .await
-            .unwrap()
-            .with_storage_directory(path);
+            .unwrap();
         let app = app(state);
 
         let server = TestServer::new(app).unwrap();
@@ -135,10 +138,11 @@ mod tests {
     async fn download_file() {
         let tmp_dir = TempDir::new().unwrap();
         let path = tmp_dir.path().to_path_buf();
-        let state = AppState::try_new()
+        let state = AppState::builder()
+            .with_storage_directory(path.clone())
+            .try_build()
             .await
-            .unwrap()
-            .with_storage_directory(path.clone());
+            .unwrap();
 
         state
             .database

@@ -33,16 +33,20 @@ impl Database {
         Migrator::up(connection, None).await
     }
 
-    pub async fn add_file(&self, path: String, mime: &str) -> Result<(), sea_orm::DbErr> {
+    pub async fn add_file(
+        &self,
+        full_path: String,
+        thumb_path: String,
+        mime: &str,
+    ) -> Result<file::Model, sea_orm::DbErr> {
         let model = file::ActiveModel {
-            path: Set(path),
+            full_path: Set(full_path),
+            thumb_path: Set(thumb_path),
             mime: Set(mime.to_owned()),
             ..Default::default()
         };
 
-        model.insert(&self.db).await?;
-
-        Ok(())
+        model.insert(&self.db).await
     }
 
     pub async fn get_files(
@@ -75,26 +79,32 @@ mod tests {
     async fn adding_file() {
         let db = Database::try_new().await.unwrap();
 
-        db.add_file("test".to_string(), "xyz").await.unwrap();
+        db.add_file("test".to_string(), "test2".to_string(), "xyz")
+            .await
+            .unwrap();
 
         let files = db.get_files(0, 5).await.unwrap();
         assert_eq!(files.len(), 1);
         let first_file = files.first().unwrap();
         assert_eq!(first_file.id, 1);
         assert_eq!(first_file.mime, "xyz");
-        assert_eq!(first_file.path, "test".to_string());
+        assert_eq!(first_file.full_path, "test".to_string());
+        assert_eq!(first_file.thumb_path, "test2".to_string());
     }
 
     #[tokio::test]
     async fn get_one_file() {
         let db = Database::try_new().await.unwrap();
 
-        db.add_file("test".to_string(), "xyz").await.unwrap();
+        db.add_file("test".to_string(), "test2".to_string(), "xyz")
+            .await
+            .unwrap();
 
         let file = db.get_file(1).await.unwrap();
 
         assert_eq!(file.id, 1);
         assert_eq!(file.mime, "xyz");
-        assert_eq!(file.path, "test".to_string());
+        assert_eq!(file.full_path, "test".to_string());
+        assert_eq!(file.thumb_path, "test2".to_string());
     }
 }

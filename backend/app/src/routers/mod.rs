@@ -1,5 +1,6 @@
 use axum::Router;
 use axum::body::Body;
+use axum::extract::DefaultBodyLimit;
 use axum::http::{Method, Request, StatusCode, Uri};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
@@ -7,7 +8,7 @@ use tracing::{Span, info, warn};
 
 use crate::state::AppState;
 
-mod images;
+mod storage;
 mod upload;
 
 pub fn app(state: AppState) -> Router {
@@ -18,7 +19,8 @@ pub fn app(state: AppState) -> Router {
 
     Router::new()
         .nest("/upload", upload::router())
-        .nest("/images", images::router())
+        .nest("/storage", storage::router())
+        .layer(DefaultBodyLimit::max(5 * 1024 * 1024)) // 5 MB
         .layer(TraceLayer::new_for_http().on_request(request_layer))
         .layer(cors)
         .fallback(fallback)

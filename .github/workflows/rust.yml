@@ -15,6 +15,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: install depedencies
+      run: sudo apt install libavfilter-dev libavdevice-dev libavformat-dev libavcodec-dev libavutil-dev pkg-config
     - name: Build
       run: cargo build --verbose
       working-directory: ./backend

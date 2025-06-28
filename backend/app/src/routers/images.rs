@@ -27,7 +27,7 @@ struct Pagination {
 async fn images(
     State(app_state): State<AppState>,
     Query(params): Query<Pagination>,
-) -> Result<Json<Vec<i64>>, AppError> {
+) -> Result<Json<Vec<i32>>, AppError> {
     let files = app_state
         .database
         .get_files(params.page.get() - 1, params.size.get())
@@ -38,7 +38,7 @@ async fn images(
 
 async fn download(
     State(app_state): State<AppState>,
-    Path(id): Path<i64>,
+    Path(id): Path<i32>,
 ) -> Result<Response<Body>, AppError> {
     let db_file = app_state.database.get_file(id).await?;
 

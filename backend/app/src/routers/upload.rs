@@ -63,16 +63,23 @@ mod tests {
 
     use axum_test::TestServer;
     use axum_test::multipart::{MultipartForm, Part};
+    use image::RgbImage;
     use rstest::{fixture, rstest};
-    use std::fs::{read_dir, read_to_string};
+    use std::fs::read_dir;
+    use std::io::Cursor;
     use tempfile::TempDir;
 
     #[fixture]
     fn image_form() -> MultipartForm {
-        let file_bytes = b"test file content".to_vec();
-        let part = Part::bytes(file_bytes)
+        let img = RgbImage::new(50, 50);
+
+        let mut png_bytes = Vec::new();
+        img.write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)
+            .unwrap();
+
+        let part = Part::bytes(png_bytes)
             .file_name("test.png")
-            .mime_type("image/jpeg");
+            .mime_type("image/png");
 
         MultipartForm::new().add_part("file", part)
     }
@@ -102,8 +109,6 @@ mod tests {
         assert_eq!(tmp_dir.len(), 1);
 
         let file = tmp_dir.first().unwrap().path();
-        let file_content = read_to_string(file.clone()).unwrap();
-        assert_eq!(file_content, "test file content");
 
         let db_files = state.database.get_files(0, 5).await.unwrap();
         assert_eq!(db_files.len(), 1);

@@ -2,9 +2,11 @@ use errors::AppError;
 use state::AppState;
 
 mod database;
+mod dto;
 mod errors;
 mod routers;
 mod state;
+mod thumbnail;
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {

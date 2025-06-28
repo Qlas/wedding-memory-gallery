@@ -9,13 +9,15 @@ use std::num::NonZeroU16;
 use tokio::fs::File;
 use tokio_util::io::ReaderStream;
 
+use crate::dto::FileResponse;
 use crate::errors::AppError;
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/", get(images))
-        .route("/{id}/download", get(download))
+        .route("/", get(get_storage))
+        .route("/{id}/full", get(download_full))
+        .route("/{id}/thumbnail", get(download_thumb))
 }
 
 #[derive(Deserialize)]
@@ -24,31 +26,48 @@ struct Pagination {
     page: NonZeroU16,
 }
 
-async fn images(
+async fn get_storage(
     State(app_state): State<AppState>,
     Query(params): Query<Pagination>,
-) -> Result<Json<Vec<i32>>, AppError> {
+) -> Result<Json<Vec<FileResponse>>, AppError> {
     let files = app_state
         .database
         .get_files(params.page.get() - 1, params.size.get())
         .await?;
 
-    Ok(Json(files.iter().map(|file| file.id).collect()))
+    Ok(Json(files.into_iter().map(Into::into).collect()))
 }
 
-async fn download(
+async fn download_full(
     State(app_state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<Response<Body>, AppError> {
     let db_file = app_state.database.get_file(id).await?;
 
-    let file = File::open(&db_file.path).await?;
+    let file = File::open(&db_file.full_path).await?;
 
     let stream = ReaderStream::new(file);
     let body = Body::from_stream(stream);
 
     Response::builder()
         .header(CONTENT_TYPE, &db_file.mime)
+        .body(body)
+        .map_err(AppError::from)
+}
+
+async fn download_thumb(
+    State(app_state): State<AppState>,
+    Path(id): Path<i32>,
+) -> Result<Response<Body>, AppError> {
+    let db_file = app_state.database.get_file(id).await?;
+
+    let file = File::open(&db_file.thumb_path).await?;
+
+    let stream = ReaderStream::new(file);
+    let body = Body::from_stream(stream);
+
+    Response::builder()
+        .header(CONTENT_TYPE, "image/png")
         .body(body)
         .map_err(AppError::from)
 }
@@ -77,7 +96,7 @@ mod tests {
 
         state
             .database
-            .add_file("test.txt".to_string(), "abc")
+            .add_file("test.txt".to_string(), "test2.txt".to_string(), "abc")
             .await
             .unwrap();
 
@@ -146,7 +165,11 @@ mod tests {
 
         state
             .database
-            .add_file(path.join("test").to_string_lossy().to_string(), "abc")
+            .add_file(
+                path.join("test").to_string_lossy().to_string(),
+                path.join("test2").to_string_lossy().to_string(),
+                "abc",
+            )
             .await
             .unwrap();
         write(path.join("test"), "abc").unwrap();

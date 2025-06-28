@@ -8,17 +8,20 @@ use crate::errors::AppError;
 #[derive(Clone)]
 pub struct AppState {
     pub database: Database,
-    pub storage_directory: PathBuf,
+    pub full_directory: PathBuf,
+    pub thumbnails_directory: PathBuf,
 }
 
 impl AppState {
     async fn try_new(storage_directory: PathBuf) -> Result<Self, AppError> {
         let state = Self {
             database: Database::try_new().await?,
-            storage_directory,
+            full_directory: storage_directory.join("full/"),
+            thumbnails_directory: storage_directory.join("thumbnails/"),
         };
 
-        fs::create_dir_all(&state.storage_directory).await?;
+        fs::create_dir_all(&state.full_directory).await?;
+        fs::create_dir_all(&state.thumbnails_directory).await?;
 
         Ok(state)
     }

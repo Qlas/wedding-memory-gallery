@@ -20,7 +20,7 @@ pub fn app(state: AppState) -> Router {
     Router::new()
         .nest("/upload", upload::router())
         .nest("/storage", storage::router())
-        .layer(DefaultBodyLimit::max(5 * 1024 * 1024)) // 5 MB
+        .layer(DefaultBodyLimit::max(500 * 1024 * 1024)) // 500 MB
         .layer(TraceLayer::new_for_http().on_request(request_layer))
         .layer(cors)
         .fallback(fallback)

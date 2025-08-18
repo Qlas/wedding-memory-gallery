@@ -84,11 +84,7 @@ mod tests {
     use axum_test::TestServer;
     use image::RgbImage;
     use serde_json::json;
-    use std::{
-        fs::{File, write},
-        io::{BufWriter, Cursor},
-        ptr::write_bytes,
-    };
+    use std::{fs::File, io::BufWriter};
     use tempfile::TempDir;
 
     #[tokio::test]

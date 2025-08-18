@@ -12,8 +12,10 @@ pub struct Database {
 impl Database {
     #[cfg(not(test))]
     pub async fn try_new() -> Result<Self, sea_orm::DbErr> {
+        use std::env;
+
         let db: DatabaseConnection =
-            sea_orm::Database::connect("sqlite://sqlite.db?mode=rwc").await?;
+            sea_orm::Database::connect(env::var("DATABASE_URL").unwrap()).await?;
 
         Database::prepare_database(&db).await?;
 

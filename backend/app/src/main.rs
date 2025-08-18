@@ -1,5 +1,6 @@
 use errors::AppError;
 use state::AppState;
+use tracing::info;
 
 mod database;
 mod dto;
@@ -12,6 +13,8 @@ mod thumbnail;
 async fn main() -> Result<(), AppError> {
     let state = AppState::builder().try_build().await?;
     tracing_subscriber::fmt().init();
+
+    info!("Starting server.");
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     axum::serve(listener, routers::app(state)).await?;

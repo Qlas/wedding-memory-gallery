@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: .
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app/app
+      - ./entity:/app/entity
+      - ./migration:/app/migration
+      - target:/app/target
+      - database:/app/database
+
+volumes:
+  target:
+  database:
+
+

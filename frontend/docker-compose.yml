@@ -1,0 +1,10 @@
+services:
+  frontend:
+    build:
+      context: .
+    ports:
+      - 3002:3002
+    volumes:
+      - ./.:/app
+      - /app/node_modules
+    restart: unless-stopped

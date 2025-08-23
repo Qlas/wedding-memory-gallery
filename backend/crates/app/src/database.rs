@@ -13,7 +13,9 @@ impl Database {
     #[cfg(not(test))]
     pub async fn try_new() -> Result<Self, sea_orm::DbErr> {
         use std::env;
+        use tracing::info;
 
+        info!("Database connection config: {:?}", env::var("DATABASE_URL"));
         let db: DatabaseConnection =
             sea_orm::Database::connect(env::var("DATABASE_URL").unwrap()).await?;
 

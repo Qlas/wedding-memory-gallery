@@ -10,7 +10,7 @@ services:
       volumes:
         - caddy_data:/data
         - caddy_config:/config
-        - ./Caddyfile:/etc/caddy/Caddyfile
+        - ./caddy/Caddyfile.dev:/etc/caddy/Caddyfile
       depends_on:
         - frontend
         - backend

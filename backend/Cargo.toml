@@ -1,8 +1,8 @@
 
 [workspace]
-members = ["app", "entity", "migration"]
+members = ["crates/app", "crates/entity", "crates/migration"]
 resolver = "3"
-default-members = ["app"]
+default-members = ["crates/app"]
 
 
 [workspace.dependencies]

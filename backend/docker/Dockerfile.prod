@@ -1,0 +1,24 @@
+FROM rust:1.89-trixie AS base
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y libavdevice-dev libavfilter-dev clang libavcodec-dev libavformat-dev libavutil-dev pkg-config && rm -rf /var/lib/apt/lists/*
+
+COPY backend/Cargo.lock backend/Cargo.toml ./
+COPY backend/crates crates
+
+RUN cargo build --release
+
+FROM debian:trixie
+
+WORKDIR /srv
+
+RUN apt-get update && apt-get install -y libavdevice-dev libavfilter-dev clang libavcodec-dev libavformat-dev libavutil-dev pkg-config && rm -rf /var/lib/apt/lists/*
+
+
+RUN date -u +%Y-%m-%dT%H:%M:%SZ > build_date
+
+COPY --from=base /app/target/release/app .
+
+CMD [ "/srv/app" ]
+

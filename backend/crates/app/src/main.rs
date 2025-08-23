@@ -11,8 +11,8 @@ mod thumbnail;
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
-    let state = AppState::builder().try_build().await?;
     tracing_subscriber::fmt().init();
+    let state = AppState::builder().try_build().await?;
 
     info!("Starting server.");
 

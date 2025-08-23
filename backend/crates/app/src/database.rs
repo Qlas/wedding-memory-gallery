@@ -3,6 +3,7 @@ use entity::file::Entity as File;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{ActiveModelTrait, EntityTrait, PaginatorTrait, QueryOrder};
 use sea_orm::{ActiveValue::Set, DatabaseConnection};
+use tracing::info;
 
 #[derive(Clone)]
 pub struct Database {
@@ -14,6 +15,7 @@ impl Database {
     pub async fn try_new() -> Result<Self, sea_orm::DbErr> {
         use std::env;
 
+        info!("Database connection config: {:?}", env::var("DATABASE_URL"));
         let db: DatabaseConnection =
             sea_orm::Database::connect(env::var("DATABASE_URL").unwrap()).await?;
 

@@ -2,14 +2,13 @@ services:
   backend:
     build:
       context: .
+      dockerfile: docker/Dockerfile.dev
     ports:
       - 3000:3000
     env_file:
       - .env
     volumes:
-      - ./app:/app/app
-      - ./entity:/app/entity
-      - ./migration:/app/migration
+      - ./crates:/app/crates
       - target:/app/target
       - database:/app/database
 

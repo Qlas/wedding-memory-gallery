@@ -1,0 +1,27 @@
+services:
+  backend:
+    image: qlass212/wedding-memory-gallery-backend:${VERSION}
+    env_file:
+      - .env
+    volumes:
+      - database:/srv/database
+
+  frontend:
+    image: qlass212/wedding-memory-gallery-frontend:${VERSION}
+    restart: unless-stopped
+
+  caddy:
+      image: qlass212/wedding-memory-gallery-caddy:${VERSION}
+      ports:
+        - 80:80
+      volumes:
+        - caddy_data:/data
+        - caddy_config:/config
+      depends_on:
+        - frontend
+        - backend
+
+volumes:
+  caddy_data:
+  caddy_config:
+  database:

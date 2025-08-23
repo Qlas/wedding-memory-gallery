@@ -5,6 +5,11 @@ import { Badge, Button, FileUpload, type FileUploadSelectEvent } from 'primevue'
 import Divider from 'primevue/divider';
 import ProgressSpinner from 'primevue/progressspinner';
 
+interface ExtendedFile extends File {
+  objectURL?: string;
+  blobUrl?: string;
+}
+
 const toast = useToast();
 
 const uploading = ref(false);
@@ -24,7 +29,7 @@ const onErrorHandler = () => {
 }
 
 function onFileSelect(event: FileUploadSelectEvent) {
-  event.files.forEach(file => {
+  (event.files as ExtendedFile[]).forEach(file => {
     if (file.type.startsWith('video/')) {
       file.blobUrl = URL.createObjectURL(file);
     }
@@ -32,9 +37,9 @@ function onFileSelect(event: FileUploadSelectEvent) {
   });
 }
 
-const maximize = (event) => {
-  const video = event.target;
-  if (video.requestFullscreen) {
+const maximize = (event: MouseEvent) => {
+  const video = event.target as HTMLElement | null;
+  if (video && video.requestFullscreen) {
     video.requestFullscreen();
   }
 };
@@ -49,7 +54,6 @@ const onBeforeUploadHandler = () => {
   <FileUpload url="/api/upload" @upload="onUploadHandler" @error="onErrorHandler" :maxFileSize=MAX_SIZE :multiple="true"
     accept="image/*,video/*" @select="onFileSelect" @before-upload="onBeforeUploadHandler">
     <template #header="{ chooseCallback, uploadCallback, clearCallback, files }">
-      {{ uploader }}
       <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-0">
         <div class="flex gap-2">
           <Button @click="chooseCallback()" icon="pi pi-images" rounded outlined severity="secondary"
@@ -68,10 +72,10 @@ const onBeforeUploadHandler = () => {
           class="items-center flex flex-column border-1 p-2 border-round surface-border align-items-center max-w-9rem"
           width="100" height="50">
           <div class="flex-grow-1">
-            <img v-if="file.type.startsWith('image/')" :src="file.blobUrl" alt="image preview" width="100%"
-              @dblclick="maximize($event)" />
-            <video v-else-if="file.type.startsWith('video/')" width="100%" :src="file.blobUrl" autoplay loop muted
-              @dblclick="maximize($event)"></video>
+            <img v-if="file.type.startsWith('image/')" :src="(file as ExtendedFile).blobUrl" alt="image preview"
+              width="100%" @dblclick="maximize($event)" />
+            <video v-else-if="file.type.startsWith('video/')" width="100%" :src="(file as ExtendedFile).blobUrl"
+              autoplay loop muted @dblclick="maximize($event)"></video>
           </div>
           <span class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden">{{ file.name }}</span>
           <Badge value="Completed" severity="success" class="mb-1" />
@@ -86,10 +90,10 @@ const onBeforeUploadHandler = () => {
             <ProgressSpinner />
           </div>
           <div class="flex-grow-1">
-            <img v-if="file.type.startsWith('image/')" :src="file.blobUrl" alt="image preview" width="100%"
-              @dblclick="maximize($event)" />
-            <video v-else-if="file.type.startsWith('video/')" width="100%" :src="file.blobUrl" autoplay loop muted
-              @dblclick="maximize($event)"></video>
+            <img v-if="file.type.startsWith('image/')" :src="(file as ExtendedFile).blobUrl" alt="image preview"
+              width="100%" @dblclick="maximize($event)" />
+            <video v-else-if="file.type.startsWith('video/')" width="100%" :src="(file as ExtendedFile).blobUrl"
+              autoplay loop muted @dblclick="maximize($event)"></video>
           </div>
           <span class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden">{{ file.name }}</span>
           <Badge value="Pending" severity="warn" class="mb-1" />

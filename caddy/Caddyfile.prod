@@ -1,0 +1,18 @@
+{
+  servers {
+    metrics
+  }
+}
+
+:80 {
+    handle_path /api/* {
+        reverse_proxy backend:3000
+    }
+
+    reverse_proxy frontend:3002
+}
+
+:9999 {
+    metrics
+}
+
